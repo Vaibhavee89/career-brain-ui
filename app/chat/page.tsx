@@ -155,7 +155,7 @@ export default function Chat() {
           value={input}
           onChange={(event) => setInput(event.target.value)}
           maxLength={2000}
-          placeholder="Ask Career Brain anything (e.g., &quot;What did I build at Scopely?&quot;)"
+          placeholder="Ask Career Brain anything (e.g., &quot;Tell me more about experience at Scopely?&quot;)"
           aria-label="Question"
           className="flex-1 rounded-full border border-line bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
         />
