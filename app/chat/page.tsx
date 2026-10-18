@@ -5,10 +5,10 @@ import Link from "next/link";
 import { ask, getOrCreateUserId, type AskResult } from "@/lib/chat";
 
 const SUGGESTIONS = [
-  "What's your strongest project?",
-  "Tell me about your experience.",
-  "Can I get your resume?",
-  "What are your skills?",
+  { icon: "💡", text: "What's my strongest project with LLMs?" },
+  { icon: "💼", text: "Show me backend experience" },
+  { icon: "🏆", text: "Recent wins" },
+  { icon: "🧭", text: "Architectural decisions" },
 ];
 
 type Message =
@@ -61,28 +61,38 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Ask me</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          Answers come only from public pages.
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          Ask Me — Career Assistant
+        </h1>
+        <p className="mt-1 text-sm text-muted">
+          Answers come only from public pages. Ask me anything about my
+          experience, projects, or decisions.
         </p>
       </div>
 
-      <div className="flex min-h-[280px] flex-col gap-3">
+      <div className="flex min-h-[280px] flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
+        {messages.length === 0 && (
+          <p className="py-10 text-center text-sm text-muted">
+            Ask a question, or try one of the suggestions below.
+          </p>
+        )}
         {messages.map((message, index) => {
           if (message.role === "sources") {
             return (
               <div
                 key={index}
-                className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400"
+                className="flex flex-wrap items-center gap-2 pl-9 text-xs text-muted"
               >
-                <span>Sources:</span>
+                <span className="font-medium tracking-wide uppercase">
+                  Citations
+                </span>
                 {message.paths.map((path) => (
                   <Link
                     key={path}
                     href={`/p/${slugify(path)}`}
-                    className="rounded-full border border-black/10 px-2.5 py-0.5 hover:underline dark:border-white/10"
+                    className="rounded-full border border-accent/30 bg-accent-soft px-2.5 py-0.5 text-accent hover:underline"
                   >
                     {path}
                   </Link>
@@ -99,17 +109,17 @@ export default function Chat() {
               <div
                 className={`flex h-7 w-7 flex-none items-center justify-center rounded-full text-[11px] font-bold ${
                   isYou
-                    ? "bg-blue-600 text-white"
-                    : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-accent-soft text-accent"
                 }`}
               >
                 {isYou ? "You" : "AI"}
               </div>
               <div
-                className={`rounded-xl px-3 py-2 whitespace-pre-wrap ${
+                className={`rounded-2xl px-4 py-2.5 whitespace-pre-wrap ${
                   isYou
-                    ? "bg-blue-600 text-white"
-                    : "bg-zinc-100 dark:bg-zinc-800"
+                    ? "rounded-tr-sm bg-accent text-accent-foreground"
+                    : "rounded-tl-sm border-l-2 border-accent bg-background"
                 }`}
               >
                 {message.text}
@@ -121,13 +131,14 @@ export default function Chat() {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {SUGGESTIONS.map((text) => (
+        {SUGGESTIONS.map(({ icon, text }) => (
           <button
             key={text}
             type="button"
             onClick={() => send(text)}
-            className="rounded-full border border-black/10 px-3 py-1.5 text-xs hover:border-blue-500 hover:text-blue-600 dark:border-white/10 dark:hover:text-blue-400"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs hover:border-accent hover:text-accent"
           >
+            <span aria-hidden>{icon}</span>
             {text}
           </button>
         ))}
@@ -138,26 +149,25 @@ export default function Chat() {
           event.preventDefault();
           send(input);
         }}
-        className="flex gap-2"
+        className="flex items-center gap-2"
       >
         <input
           value={input}
           onChange={(event) => setInput(event.target.value)}
           maxLength={2000}
-          placeholder="Ask about my work"
+          placeholder="Ask Career Brain anything (e.g., &quot;What did I build at Scopely?&quot;)"
           aria-label="Question"
-          className="flex-1 rounded-lg border border-black/10 bg-transparent px-3 py-2 dark:border-white/10"
+          className="flex-1 rounded-full border border-line bg-background px-4 py-2.5 text-sm outline-none focus:border-accent"
         />
         <button
           type="submit"
-          className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+          aria-label="Send"
+          className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-accent text-accent-foreground hover:opacity-90"
         >
-          Ask
+          ➤
         </button>
       </form>
-      <div className="min-h-[1.25em] text-sm text-zinc-500 dark:text-zinc-400">
-        {status}
-      </div>
+      <div className="min-h-[1.25em] text-sm text-muted">{status}</div>
     </div>
   );
 }

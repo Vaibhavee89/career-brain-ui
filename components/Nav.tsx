@@ -1,5 +1,9 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { StatusBadge } from "./StatusBadge";
+import { ThemeToggle } from "./ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Home" },
@@ -8,25 +12,36 @@ const LINKS = [
 ];
 
 export function Nav() {
+  const pathname = usePathname();
+
   return (
-    <header className="border-b border-black/10 dark:border-white/10">
+    <header className="border-b border-line">
       <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-4">
-        <Link href="/" className="font-semibold">
+        <Link href="/" className="font-semibold tracking-tight">
           Career Brain
         </Link>
-        <div className="flex items-center gap-5">
-          <nav className="flex gap-4 text-sm">
-            {LINKS.map((link) => (
+        <nav className="flex gap-5 text-sm">
+          {LINKS.map((link) => {
+            const active = pathname === link.href;
+            return (
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-blue-600 hover:underline dark:text-blue-400"
+                aria-current={active ? "page" : undefined}
+                className={`border-b-2 pb-0.5 transition-colors ${
+                  active
+                    ? "border-accent text-accent font-medium"
+                    : "border-transparent text-muted hover:text-foreground"
+                }`}
               >
                 {link.label}
               </Link>
-            ))}
-          </nav>
+            );
+          })}
+        </nav>
+        <div className="flex items-center gap-2">
           <StatusBadge />
+          <ThemeToggle />
         </div>
       </div>
     </header>

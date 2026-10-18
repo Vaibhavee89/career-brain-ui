@@ -27,7 +27,7 @@ export default async function PageDetail({
               href={link}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-black/10 px-3 py-1 text-sm text-blue-600 hover:underline dark:border-white/10 dark:text-blue-400"
+              className="rounded-full border border-accent/30 bg-accent-soft px-3 py-1 text-sm text-accent hover:underline"
             >
               {link}
             </a>

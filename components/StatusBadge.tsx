@@ -19,11 +19,15 @@ export function StatusBadge() {
   if (ok === null) return null;
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-black/10 px-2.5 py-1 text-xs text-zinc-500 dark:border-white/10 dark:text-zinc-400">
-      <span
-        className={`h-2 w-2 rounded-full ${ok ? "bg-green-500" : "bg-red-500"}`}
-      />
-      {ok ? "LLM Wiki Active" : "Chat offline"}
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
+        ok
+          ? "border-accent/30 bg-accent-soft text-accent"
+          : "border-red-300 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950 dark:text-red-300"
+      }`}
+    >
+      <span className={`h-1.5 w-1.5 rounded-full ${ok ? "bg-accent" : "bg-red-500"}`} />
+      {ok ? "Live Sync" : "Offline"}
     </span>
   );
 }

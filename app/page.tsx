@@ -4,7 +4,7 @@ import type { PageSummary } from "@/lib/config";
 
 function Card({ page }: { page: PageSummary }) {
   return (
-    <li className="rounded-lg border border-black/10 p-4 dark:border-white/10">
+    <li className="rounded-lg border border-line bg-surface p-4">
       <Link href={`/p/${page.slug}`} className="font-semibold hover:underline">
         {page.title}
       </Link>
@@ -27,13 +27,13 @@ export default async function Home() {
     <div className="flex flex-col gap-10">
       <section className="flex flex-col gap-4">
         <h1 className="text-3xl font-semibold tracking-tight">Career Brain</h1>
-        <p className="max-w-xl text-zinc-600 dark:text-zinc-400">
+        <p className="max-w-xl text-muted">
           A living record of what I&apos;ve built, cited straight from the source.
           Browse the public pages below, or ask the brain directly.
         </p>
         <Link
           href="/chat"
-          className="inline-flex w-fit items-center rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+          className="inline-flex w-fit items-center rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground hover:opacity-90"
         >
           Ask me anything →
         </Link>
@@ -49,7 +49,7 @@ export default async function Home() {
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Projects</h2>
-            <Link href="/projects" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <Link href="/projects" className="text-sm text-accent hover:underline">
               View all
             </Link>
           </div>
