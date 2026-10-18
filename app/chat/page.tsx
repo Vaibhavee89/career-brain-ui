@@ -5,10 +5,10 @@ import Link from "next/link";
 import { ask, getOrCreateUserId, type AskResult } from "@/lib/chat";
 
 const SUGGESTIONS = [
-  { icon: "💡", text: "What's my strongest project with LLMs?" },
-  { icon: "💼", text: "Show me backend experience" },
-  { icon: "🏆", text: "Recent wins" },
-  { icon: "🧭", text: "Architectural decisions" },
+  { icon: "💡", text: "What's Vaibhavee's strongest project with LLMs?" },
+  { icon: "💼", text: "Show me Vaibhavee's backend experience" },
+  { icon: "🏆", text: "What are Vaibhavee's recent wins?" },
+  { icon: "🧭", text: "What architectural decisions has Vaibhavee made?" },
 ];
 
 type Message =
