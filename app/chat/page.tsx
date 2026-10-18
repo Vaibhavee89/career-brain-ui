@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { ask, getOrCreateUserId, type AskResult } from "@/lib/chat";
 
@@ -15,6 +15,37 @@ type Message =
   | { role: "you"; text: string }
   | { role: "bot"; text: string }
   | { role: "sources"; paths: string[] };
+
+// Matches http(s) URLs; a trailing sentence punctuation mark is excluded below.
+const URL_PATTERN = /https?:\/\/[^\s<>"']+/g;
+const TRAILING_PUNCTUATION = /[.,;:!?)\]]+$/;
+
+// Turns bare URLs in plain text into real anchors. Built with React nodes,
+// not innerHTML, so the text stays untrusted-safe.
+function linkify(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(URL_PATTERN)) {
+    const raw = match[0];
+    const url = raw.replace(TRAILING_PUNCTUATION, "");
+    const start = match.index ?? 0;
+    if (start > last) nodes.push(text.slice(last, start));
+    nodes.push(
+      <a
+        key={`${start}-${url}`}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="break-all underline underline-offset-2 hover:opacity-80"
+      >
+        {url}
+      </a>
+    );
+    last = start + url.length;
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+}
 
 function slugify(path: string): string {
   return path.replace(/\.md$/, "").split("/").join("--");
@@ -122,7 +153,7 @@ export default function Chat() {
                     : "rounded-tl-sm border-l-2 border-accent bg-background"
                 }`}
               >
-                {message.text}
+                {linkify(message.text)}
               </div>
             </div>
           );
