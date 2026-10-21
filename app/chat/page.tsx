@@ -47,6 +47,27 @@ function linkify(text: string): ReactNode[] {
   return nodes;
 }
 
+const MESSAGES_KEY = "cb-chat-messages";
+
+// Per-viewer convenience only: the conversation survives reloads in this
+// browser. The server keeps its own history per user id, so follow-ups still
+// work after a reload. Storage can be blocked or full, so every access is
+// guarded and the page works without it.
+function loadMessages(): Message[] {
+  try {
+    const parsed: unknown = JSON.parse(window.localStorage.getItem(MESSAGES_KEY) || "[]");
+    return Array.isArray(parsed) ? (parsed as Message[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages(messages: Message[]): void {
+  try {
+    window.localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+  } catch {}
+}
+
 function slugify(path: string): string {
   return path.replace(/\.md$/, "").split("/").join("--");
 }
@@ -56,11 +77,30 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [status, setStatus] = useState("");
   const [userId] = useState(() => getOrCreateUserId());
+  const [restored, setRestored] = useState(false);
   const logEnd = useRef<HTMLDivElement>(null);
+
+  // Restore after mount, not during render, so server and client markup match.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMessages(loadMessages());
+    setRestored(true);
+  }, []);
+
+  useEffect(() => {
+    if (restored) saveMessages(messages);
+  }, [messages, restored]);
 
   useEffect(() => {
     logEnd.current?.scrollIntoView({ block: "end" });
   }, [messages]);
+
+  function clearChat() {
+    setMessages([]);
+    try {
+      window.localStorage.removeItem(MESSAGES_KEY);
+    } catch {}
+  }
 
   async function send(question: string) {
     const text = question.trim();
@@ -198,7 +238,18 @@ export default function Chat() {
           ➤
         </button>
       </form>
-      <div className="min-h-[1.25em] text-sm text-muted">{status}</div>
+      <div className="flex min-h-[1.25em] items-center justify-between text-sm text-muted">
+        <span>{status}</span>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            onClick={clearChat}
+            className="text-xs hover:text-accent hover:underline"
+          >
+            Clear chat
+          </button>
+        )}
+      </div>
     </div>
   );
 }
