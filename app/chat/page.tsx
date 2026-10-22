@@ -170,6 +170,7 @@ export default function Chat() {
     setStatus("Thinking...");
     const result: AskResult = await ask(userId, text);
     if (result.kind === "rate_limited") {
+      touchActivity();
       setMessages((prev) => [
         ...prev,
         {
@@ -178,8 +179,10 @@ export default function Chat() {
         },
       ]);
     } else if (result.kind === "error") {
+      touchActivity();
       setMessages((prev) => [...prev, { role: "bot", text: result.detail }]);
     } else {
+      touchActivity();
       setMessages((prev) => [
         ...prev,
         ...result.chunks.map((chunk) => ({ role: "bot" as const, text: chunk })),
