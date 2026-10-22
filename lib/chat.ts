@@ -54,3 +54,15 @@ export function getOrCreateUserId(): string {
     return "anonymous";
   }
 }
+
+// Clears the server-side conversation for this user id. Best effort: a failed
+// reset only means old context may linger until the server restarts.
+export async function resetConversation(userId: string): Promise<void> {
+  try {
+    await fetch(`${requireApiUrl()}/reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId }),
+    });
+  } catch {}
+}

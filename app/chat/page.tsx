@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { ask, getOrCreateUserId, type AskResult } from "@/lib/chat";
+import { ask, getOrCreateUserId, resetConversation, type AskResult } from "@/lib/chat";
 
 const SUGGESTIONS = [
   { icon: "💡", text: "What's Vaibhavee's strongest project with LLMs?" },
@@ -48,14 +48,17 @@ function linkify(text: string): ReactNode[] {
 }
 
 const MESSAGES_KEY = "cb-chat-messages";
+const LAST_ACTIVE_KEY = "cb-chat-last-active";
+const IDLE_LIMIT_MS = 15 * 60 * 1000;
+const IDLE_CHECK_MS = 30 * 1000;
 
-// Per-viewer convenience only: the conversation survives reloads in this
-// browser. The server keeps its own history per user id, so follow-ups still
-// work after a reload. Storage can be blocked or full, so every access is
-// guarded and the page works without it.
+// Per-tab conversation. sessionStorage is cleared when the tab closes, so a
+// reopened page starts fresh. Browsers that restore closed tabs can bring the
+// messages back. The conversation also expires after 15 idle minutes. Storage
+// can be blocked or full, so every access is guarded.
 function loadMessages(): Message[] {
   try {
-    const parsed: unknown = JSON.parse(window.localStorage.getItem(MESSAGES_KEY) || "[]");
+    const parsed: unknown = JSON.parse(window.sessionStorage.getItem(MESSAGES_KEY) || "[]");
     return Array.isArray(parsed) ? (parsed as Message[]) : [];
   } catch {
     return [];
@@ -64,7 +67,29 @@ function loadMessages(): Message[] {
 
 function saveMessages(messages: Message[]): void {
   try {
-    window.localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+    window.sessionStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+  } catch {}
+}
+
+function touchActivity(): void {
+  try {
+    window.sessionStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()));
+  } catch {}
+}
+
+function isIdle(): boolean {
+  try {
+    const last = Number(window.sessionStorage.getItem(LAST_ACTIVE_KEY));
+    return Boolean(last) && Date.now() - last > IDLE_LIMIT_MS;
+  } catch {
+    return false;
+  }
+}
+
+function forgetLocalConversation(): void {
+  try {
+    window.sessionStorage.removeItem(MESSAGES_KEY);
+    window.sessionStorage.removeItem(LAST_ACTIVE_KEY);
   } catch {}
 }
 
@@ -81,11 +106,30 @@ export default function Chat() {
   const logEnd = useRef<HTMLDivElement>(null);
 
   // Restore after mount, not during render, so server and client markup match.
+  // An expired conversation is dropped here and on the server.
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMessages(loadMessages());
+    if (isIdle()) {
+      forgetLocalConversation();
+      void resetConversation(userId);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMessages([]);
+    } else {
+      setMessages(loadMessages());
+    }
     setRestored(true);
-  }, []);
+  }, [userId]);
+
+  // Also expire while the page stays open and idle.
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      if (isIdle()) {
+        forgetLocalConversation();
+        void resetConversation(userId);
+        setMessages([]);
+      }
+    }, IDLE_CHECK_MS);
+    return () => window.clearInterval(timer);
+  }, [userId]);
 
   useEffect(() => {
     if (restored) saveMessages(messages);
@@ -97,14 +141,19 @@ export default function Chat() {
 
   function clearChat() {
     setMessages([]);
-    try {
-      window.localStorage.removeItem(MESSAGES_KEY);
-    } catch {}
+    forgetLocalConversation();
+    void resetConversation(userId);
   }
 
   async function send(question: string) {
     const text = question.trim();
     if (!text || !userId) return;
+    if (isIdle()) {
+      forgetLocalConversation();
+      void resetConversation(userId);
+      setMessages([]);
+    }
+    touchActivity();
     setInput("");
     setMessages((prev) => [...prev, { role: "you", text }]);
     setStatus("Thinking...");
