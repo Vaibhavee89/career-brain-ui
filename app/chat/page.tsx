@@ -71,6 +71,14 @@ function saveMessages(messages: Message[]): void {
   } catch {}
 }
 
+function hasSavedMessages(): boolean {
+  try {
+    return window.sessionStorage.getItem(MESSAGES_KEY) !== null;
+  } catch {
+    return false;
+  }
+}
+
 function touchActivity(): void {
   try {
     window.sessionStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()));
@@ -114,6 +122,9 @@ export default function Chat() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages([]);
     } else {
+      // A fresh tab has no saved messages, so the server's history for this
+      // user id is stale too. Reset it so the reopened page really starts over.
+      if (!hasSavedMessages()) void resetConversation(userId);
       setMessages(loadMessages());
     }
     setRestored(true);
